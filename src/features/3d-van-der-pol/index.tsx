@@ -102,15 +102,14 @@ export const VanDerPol3DPlot = () => {
             </Popover>
           </div>
         </div>
-        <div className="relative w-full md:w-[50%] h-full">
+        <div className="relative w-full md:w-[50%] min-h-[619px] h-full">
           {isPending ? (
             <FullContainerLoader />
           ) : (
             <Plot
-              className="w-full min-w-[375px] h-full"
+              className="w-full min-w-[375px] min-h-[619px] h-full"
               data={plotData}
               layout={{
-                height: 600,
                 title: "Предельный цикл",
                 autosize: true,
                 scene: {

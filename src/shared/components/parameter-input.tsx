@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Undo2 } from "lucide-react";
@@ -55,13 +55,29 @@ export const ParameterInput = memo(
       onChange(parsed);
     };
 
-    const handleUndo = () => {
-      if (history.length === 0) return;
+    const filteredHistory = useMemo(() => {
+      const exist = new Set();
+      return [...history].filter((item) => {
+        if (item === 0) return false;
+        const isExist = exist.has(item);
 
-      const lastValue = history[history.length - 1];
-      setLocalValue(lastValue.toString());
-      onChange(lastValue);
-      setHistory((prev) => prev.slice(0, -1));
+        if (!isExist) exist.add(item);
+
+        return !isExist;
+      });
+    }, [history]);
+
+    const handleUndo = () => {
+      if (filteredHistory.length === 0) return;
+
+      let lastValue = filteredHistory.pop();
+
+      if (lastValue) {
+        setLocalValue(lastValue.toString());
+        onChange(lastValue);
+        setHistory((prev) => prev.slice(0, -1));
+        setError("");
+      }
     };
 
     return (
@@ -83,7 +99,7 @@ export const ParameterInput = memo(
           variant="ghost"
           size="icon"
           onClick={handleUndo}
-          disabled={history.length === 0}
+          disabled={!filteredHistory.length}
           className="cursor-pointer"
         >
           <Undo2 />

@@ -57,7 +57,7 @@ export const ParameterInput = memo(
 
     const filteredHistory = useMemo(() => {
       const exist = new Set();
-      return [...history].filter((item) => {
+      return history.filter((item) => {
         if (item === 0) return false;
         const isExist = exist.has(item);
 

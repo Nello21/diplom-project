@@ -1,8 +1,5 @@
-import {
-  simulateVanDerPol,
-  VanDerPolParameters,
-} from "@/shared/functions/3d-van-der-pol";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { simulateVanDerPol } from "@/shared/functions/3d-van-der-pol";
+import { useMemo, useState, useTransition } from "react";
 import Plot from "react-plotly.js";
 import { ParameterInput } from "../../shared/components/parameter-input";
 import { HexColorPicker } from "react-colorful";
@@ -14,50 +11,82 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Data } from "plotly.js";
 import { FullContainerLoader } from "@/shared/components/full-container-loader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
+  IntegrationMethod,
+  GraphicParameters,
+  ZTrajectory,
+} from "@/shared/types";
+
+type ValuesType = Omit<GraphicParameters, "method">;
 
 export const VanDerPol3DPlot = () => {
-  const initialValues = {
+  const initialValues: ValuesType = {
     ε: 0.05,
     α: 1,
     β: 0.9,
-    steps: 8000,
-    dt: 0.01,
-    x0: 1,
+    dt: 0.001,
+    x0: 0,
     y0: 0,
     z0: 0,
   };
 
-  const [values, setValues] = useState<VanDerPolParameters>(initialValues);
   const [color, setColor] = useState("#aabbcc");
   const [resetKey, setResetKey] = useState(0);
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState(simulateVanDerPol(initialValues));
+  const [method, setMethod] = useState<IntegrationMethod>("euler");
+  const [values, setValues] = useState<ValuesType>(initialValues);
+
+  const [trajectories, setTrajectories] = useState<ZTrajectory[]>([]);
 
   const resetValues = () => {
     setValues(initialValues);
+    setTrajectories([]);
     setResetKey((prev) => prev + 1);
   };
 
-  useEffect(() => {
+  const addTrajectory = () => {
     startTransition(() => {
-      const simulation = simulateVanDerPol(values);
-      setResult(simulation);
+      const newTrajectory = simulateVanDerPol({
+        ...values,
+        method,
+      });
+      setTrajectories((prev) => [...prev, { ...newTrajectory, color }]);
     });
-  }, [values]);
+  };
 
-  const plotData: Data[] = useMemo(
-    () => [
-      {
-        type: "scatter3d",
-        mode: "lines",
-        x: result.xs,
-        y: result.ys,
-        z: result.zs,
-        line: { width: 2, color },
-      },
-    ],
-    [result, color]
-  );
+  const removeTrajectory = (index: number) => {
+    setTrajectories((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const plotData: Data[] = useMemo(() => {
+    if (trajectories.length === 0) {
+      return [
+        {
+          type: "scatter3d",
+          mode: "lines",
+          x: [1],
+          y: [1],
+          z: [1],
+        },
+      ];
+    }
+
+    return trajectories.map((trajectory) => ({
+      type: "scatter3d",
+      mode: "lines",
+      x: trajectory.xs,
+      y: trajectory.ys,
+      z: trajectory.zs,
+      line: { width: 2, color: trajectory.color },
+    }));
+  }, [trajectories]);
 
   const onChange = (key: string, value: number) => {
     setValues((prev) => ({
@@ -77,10 +106,44 @@ export const VanDerPol3DPlot = () => {
             variant="outline"
             size="sm"
             onClick={resetValues}
-            className="max-w-fit cursor-pointer"
+            className="max-w-fit"
           >
             Сбросить значения
           </Button>
+
+          <div className="flex flex-col gap-2">
+            <Select
+              value={method}
+              onValueChange={(value) => setMethod(value as IntegrationMethod)}
+            >
+              <SelectTrigger className="w-fit">
+                <SelectValue placeholder="Методы счета" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="euler">Метод Эйлера</SelectItem>
+                <SelectItem value="rk4">Рунге-Кутта 4-го порядка</SelectItem>
+                <SelectItem value="adams">Метод Адамса</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              onValueChange={(v) =>
+                onChange(
+                  "dt",
+                  Math.abs(values.dt) * (v === "backward" ? -1 : 1)
+                )
+              }
+            >
+              <SelectTrigger className="w-fit">
+                <SelectValue placeholder="Направление времени" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">Вперёд</SelectItem>
+                <SelectItem value="backward">Назад</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {Object.entries(values).map(([key, value]) => (
             <ParameterInput
               key={key}
@@ -90,6 +153,7 @@ export const VanDerPol3DPlot = () => {
               onChange={(v) => onChange(key, v)}
             />
           ))}
+
           <div className="grid grid-cols-[5rem_minmax(auto,max-content)] items-start gap-2">
             <span>цвет:</span>
             <Popover>
@@ -101,7 +165,40 @@ export const VanDerPol3DPlot = () => {
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Поля для начальных условий */}
+          <div className="mt-4 border-t pt-4">
+            <Button onClick={addTrajectory} className="mt-2">
+              Добавить траекторию
+            </Button>
+          </div>
+
+          {/* Список траекторий с возможностью удаления */}
+          {trajectories.length > 0 && (
+            <div className="mt-4 border-t pt-4">
+              <h3 className="font-medium mb-2">Траектории:</h3>
+              <div className="pr-4 max-h-60 overflow-y-auto">
+                {trajectories.map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-1"
+                  >
+                    <span>Траектория {index}</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeTrajectory(index)}
+                      className="hover:cursor-pointer hover:opacity-90"
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
         <div className="relative w-full md:w-[50%] min-h-[619px] h-full">
           {isPending ? (
             <FullContainerLoader />
@@ -115,7 +212,7 @@ export const VanDerPol3DPlot = () => {
                 scene: {
                   xaxis: { title: "x" },
                   yaxis: { title: "y" },
-                  zaxis: { title: "z" },
+                  zaxis: { title: "z", range: [-1, 1] },
                 },
               }}
               config={{ displaylogo: false }}

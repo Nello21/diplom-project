@@ -1,10 +1,6 @@
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Plot from "react-plotly.js";
-import {
-  computeTrajectory,
-  systemParams,
-  Trajectory,
-} from "@/shared/functions/averaged-system";
+import { computeTrajectory } from "@/shared/functions/averaged-system";
 import { ParameterInput } from "@/shared/components/parameter-input";
 import {
   Popover,
@@ -14,28 +10,79 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { HexColorPicker } from "react-colorful";
 import { FullContainerLoader } from "@/shared/components/full-container-loader";
+import {
+  GraphicParameters,
+  IntegrationMethod,
+  UTrajectory,
+} from "@/shared/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import { Data } from "plotly.js";
+
+type ValuesType = Omit<GraphicParameters, "method">;
 
 export const PhasePortrait = () => {
-  const [isPending, startTransition] = useTransition();
-  const [trajectories, setTrajectories] = useState<Trajectory[]>([]);
   const initialValues = {
     ε: 1,
     α: 1,
     β: 0.9,
-    dt: 0.01,
-    steps: 1000,
+    dt: 0.001,
+    x0: 0,
+    y0: 0,
   };
-  const [values, setValues] = useState<systemParams>(initialValues);
-  const initialAxisSteps = { yStep: 0.1, xStep: 0.5 };
-  const [axisSteps, setAxisSteps] = useState(initialAxisSteps);
+
+  const [isPending, startTransition] = useTransition();
+  const [trajectories, setTrajectories] = useState<UTrajectory[]>([]);
+  const [values, setValues] = useState<ValuesType>(initialValues);
+  const [method, setMethod] = useState<IntegrationMethod>("euler");
   const [color, setColor] = useState("#aabbcc");
   const [resetKey, setResetKey] = useState(0);
 
   const resetValues = () => {
     setValues(initialValues);
-    setAxisSteps(initialAxisSteps);
+    setTrajectories([]);
     setResetKey((prev) => prev + 1);
   };
+
+  const addTrajectory = () => {
+    startTransition(() => {
+      const newTrajectory = computeTrajectory({
+        ...values,
+        method,
+      });
+      setTrajectories((prev) => [...prev, { ...newTrajectory, color }]);
+    });
+  };
+
+  const removeTrajectory = (index: number) => {
+    setTrajectories((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const plotData: Data[] = useMemo(() => {
+    if (trajectories.length === 0) {
+      return [
+        {
+          type: "scatter",
+          mode: "lines",
+          x: [0],
+          y: [0],
+        },
+      ];
+    }
+
+    return trajectories.map((traj) => ({
+      type: "scatter",
+      mode: "lines",
+      x: traj.u1s,
+      y: traj.u2s,
+      line: { width: 2, color: traj.color },
+    }));
+  }, [trajectories]);
 
   const onChange = (key: string, value: number) => {
     setValues((prev) => ({
@@ -43,41 +90,6 @@ export const PhasePortrait = () => {
       [key]: value,
     }));
   };
-  const onAxisStepsChange = (key: string, value: number) => {
-    setAxisSteps((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const MAX_POINTS = 500;
-
-  const initialConditions = useMemo(() => {
-    if (axisSteps.xStep < 0.05 || axisSteps.yStep < 0.05) return [];
-
-    const points: number[][] = [];
-    for (let x = 0; x <= 8; x += axisSteps.xStep) {
-      for (let y = -1; y <= 1; y += axisSteps.yStep) {
-        points.push([x, y]);
-      }
-    }
-    return points.slice(0, MAX_POINTS);
-  }, [axisSteps.xStep, axisSteps.yStep]);
-
-  useEffect(() => {
-    if (initialConditions.length === 0) {
-      setTrajectories([]);
-      return;
-    }
-
-    startTransition(() => {
-      const trajs = initialConditions
-        .map(([u1, u2]) => computeTrajectory(u1, u2, { ...values }))
-        .filter((traj) => traj.x.length > 50);
-
-      setTrajectories(trajs);
-    });
-  }, [values, initialConditions]);
 
   return (
     <div className="flex flex-col items-start md:items-center w-full h-full">
@@ -92,16 +104,40 @@ export const PhasePortrait = () => {
           >
             Сбросить значения
           </Button>
-          {Object.entries(axisSteps).map(([key, value]) => (
-            <ParameterInput
-              minValue={0.05}
-              key={key}
-              label={key}
-              value={value}
-              resetKey={resetKey}
-              onChange={(v) => onAxisStepsChange(key, v)}
-            />
-          ))}
+
+          <div className="flex flex-col gap-2">
+            <Select
+              value={method}
+              onValueChange={(value) => setMethod(value as IntegrationMethod)}
+            >
+              <SelectTrigger className="w-fit">
+                <SelectValue placeholder="Методы счета" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="euler">Метод Эйлера</SelectItem>
+                <SelectItem value="rk4">Рунге-Кутта 4-го порядка</SelectItem>
+                <SelectItem value="adams">Метод Адамса</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              onValueChange={(v) =>
+                onChange(
+                  "dt",
+                  Math.abs(values.dt) * (v === "backward" ? -1 : 1)
+                )
+              }
+            >
+              <SelectTrigger className="w-fit">
+                <SelectValue placeholder="Направление времени" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="forward">Вперёд</SelectItem>
+                <SelectItem value="backward">Назад</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {Object.entries(values).map(([key, value]) => (
             <ParameterInput
               key={key}
@@ -111,6 +147,7 @@ export const PhasePortrait = () => {
               onChange={(v) => onChange(key, v)}
             />
           ))}
+
           <div className="grid grid-cols-[5rem_minmax(auto,max-content)] items-start gap-2">
             <span>цвет:</span>
             <Popover>
@@ -122,27 +159,56 @@ export const PhasePortrait = () => {
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Поля для начальных условий */}
+          <div className="mt-4 border-t pt-4">
+            <Button onClick={addTrajectory} className="mt-2">
+              Добавить траекторию
+            </Button>
+          </div>
+
+          {/* Список траекторий с возможностью удаления */}
+          {trajectories.length > 0 && (
+            <div className="mt-4 border-t pt-4">
+              <h3 className="font-medium mb-2">Траектории:</h3>
+              <div className="pr-4 max-h-60 overflow-y-auto">
+                {trajectories.map((_, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-1"
+                  >
+                    <span>Траектория {index}</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeTrajectory(index)}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
         <div className="relative w-full md:w-[50%] h-full min-h-[600px]">
           {isPending ? (
             <FullContainerLoader />
           ) : (
             <Plot
               className="w-full h-full"
-              data={trajectories.map((traj) => ({
-                type: "scatter",
-                mode: "lines",
-                x: traj.x,
-                y: traj.y,
-                line: { width: 2, color: color },
-              }))}
+              data={plotData}
               layout={{
                 title: "Фазовый портрет",
                 autosize: true,
                 height: 600,
                 margin: { l: 40, r: 40, t: 40, b: 40 },
-                xaxis: { title: "x" },
-                yaxis: { title: "y" },
+                xaxis: { title: "u1", range: [0, 9] },
+                yaxis: {
+                  title: "u2",
+                  range: [-1, 1],
+                },
                 showlegend: false,
               }}
               useResizeHandler

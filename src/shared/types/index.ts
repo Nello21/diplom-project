@@ -7,7 +7,7 @@ export type GraphicParameters = {
   dt: number;
   x0: number;
   y0: number;
-  z0?: number;
+  z0: number;
   method: IntegrationMethod;
 };
 
@@ -23,8 +23,14 @@ export type ZTrajectory = {
   ys: number[];
   zs: number[];
   color: string;
+  lineWidth: number;
 };
-export type UTrajectory = { u1s: number[]; u2s: number[]; color: string };
+export type UTrajectory = {
+  u1s: number[];
+  u2s: number[];
+  color: string;
+  lineWidth: number;
+};
 
 export type systemParams = {
   ε: number;

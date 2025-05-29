@@ -2,26 +2,42 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Undo2 } from "lucide-react";
+import { cn } from "../lib/utils";
 
 type Props = {
-  label: string;
+  label?: string;
   value: number;
   onChange: (value: number) => void;
+  addTrajectory: () => void;
   minValue?: number;
   resetKey?: number;
+  backup?: boolean;
+  className?: string;
+  hideLabel?: boolean;
+  isValidText?: boolean;
 };
 
 export const ParameterInput = memo(
-  ({ label, value, minValue, resetKey, onChange }: Props) => {
-    const [localValue, setLocalValue] = useState(value.toString());
+  ({
+    label,
+    value,
+    minValue,
+    resetKey,
+    onChange,
+    backup,
+    className,
+    isValidText,
+    addTrajectory,
+  }: Props) => {
+    const [localValue, setLocalValue] = useState(String(value));
     const [error, setError] = useState("");
     const [history, setHistory] = useState<number[]>([]);
 
     useEffect(() => {
-      setLocalValue(value.toString());
+      setLocalValue(String(value));
       setError("");
       setHistory([]);
-    }, [resetKey]);
+    }, [value, resetKey]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value.trim();
@@ -81,29 +97,40 @@ export const ParameterInput = memo(
     };
 
     return (
-      <div className="grid grid-cols-[5rem_minmax(auto,max-content)_2.25rem] items-start gap-2">
-        <label htmlFor={label} className="select-none">
-          {label}:
-        </label>
+      <div className="flex gap-2">
         <div className="flex flex-col gap-2">
           <Input
             id={label}
             type="text"
             value={localValue}
             onChange={handleChange}
-            className="max-w-[10rem]"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !error) return addTrajectory();
+            }}
+            className={cn(
+              "max-w-[10rem]",
+              {
+                ["ring-destructive border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25"]:
+                  error,
+              },
+              className
+            )}
           />
-          {error && <span className="text-red-500 text-sm">{error}</span>}
+          {isValidText && error && (
+            <span className="text-red-500 text-sm">{error}</span>
+          )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleUndo}
-          disabled={!filteredHistory.length}
-          className="cursor-pointer"
-        >
-          <Undo2 />
-        </Button>
+        {backup && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleUndo}
+            disabled={!filteredHistory.length}
+            className="cursor-pointer"
+          >
+            <Undo2 />
+          </Button>
+        )}
       </div>
     );
   }

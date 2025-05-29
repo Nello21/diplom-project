@@ -1,16 +1,20 @@
-import { simulateVanDerPol } from "@/shared/functions/3d-van-der-pol";
 import { useMemo, useState, useTransition } from "react";
 import Plot from "react-plotly.js";
-import { ParameterInput } from "../../shared/components/parameter-input";
-import { HexColorPicker } from "react-colorful";
+import { computeTrajectory } from "@/shared/functions/averaged-system";
+import { ParameterInput } from "@/shared/components/parameter-input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { Button } from "@/shared/components/ui/button";
-import { Data } from "plotly.js";
+import { HexColorPicker } from "react-colorful";
 import { FullContainerLoader } from "@/shared/components/full-container-loader";
+import {
+  GraphicParameters,
+  IntegrationMethod,
+  UTrajectory,
+} from "@/shared/types";
 import {
   Select,
   SelectContent,
@@ -18,32 +22,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import {
-  IntegrationMethod,
-  GraphicParameters,
-  ZTrajectory,
-} from "@/shared/types";
+import { Data } from "plotly.js";
 
-type ValuesType = Omit<GraphicParameters, "method">;
+type ValuesType = Omit<GraphicParameters, "method" | "z0">;
 
-export const VanDerPol3DPlot = () => {
-  const initialValues: ValuesType = {
-    ε: 0.05,
+export const PhasePortrait = () => {
+  const initialValues = {
+    ε: 1,
     α: 1,
     β: 0.9,
     dt: 0.001,
     x0: 0,
     y0: 0,
-    z0: 0,
   };
 
+  const [isPending, startTransition] = useTransition();
+  const [lineWidth] = useState(2);
+  const [trajectories, setTrajectories] = useState<UTrajectory[]>([]);
+  const [values, setValues] = useState<ValuesType>(initialValues);
+  const [method, setMethod] = useState<IntegrationMethod>("euler");
   const [color, setColor] = useState("#aabbcc");
   const [resetKey, setResetKey] = useState(0);
-  const [isPending, startTransition] = useTransition();
-  const [method, setMethod] = useState<IntegrationMethod>("euler");
-  const [values, setValues] = useState<ValuesType>(initialValues);
-
-  const [trajectories, setTrajectories] = useState<ZTrajectory[]>([]);
 
   const resetValues = () => {
     setValues(initialValues);
@@ -53,11 +52,14 @@ export const VanDerPol3DPlot = () => {
 
   const addTrajectory = () => {
     startTransition(() => {
-      const newTrajectory = simulateVanDerPol({
+      const newTrajectory = computeTrajectory({
         ...values,
         method,
       });
-      setTrajectories((prev) => [...prev, { ...newTrajectory, color }]);
+      setTrajectories((prev) => [
+        ...prev,
+        { ...newTrajectory, color, lineWidth },
+      ]);
     });
   };
 
@@ -69,22 +71,20 @@ export const VanDerPol3DPlot = () => {
     if (trajectories.length === 0) {
       return [
         {
-          type: "scatter3d",
+          type: "scatter",
           mode: "lines",
-          x: [1],
-          y: [1],
-          z: [1],
+          x: [0],
+          y: [0],
         },
       ];
     }
 
     return trajectories.map((trajectory) => ({
-      type: "scatter3d",
+      type: "scatter",
       mode: "lines",
-      x: trajectory.xs,
-      y: trajectory.ys,
-      z: trajectory.zs,
-      line: { width: 2, color: trajectory.color },
+      x: trajectory.u1s,
+      y: trajectory.u2s,
+      line: { width: trajectory.lineWidth, color: trajectory.color },
     }));
   }, [trajectories]);
 
@@ -96,9 +96,9 @@ export const VanDerPol3DPlot = () => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full h-full">
+    <div className="flex flex-col items-start md:items-center w-full h-full">
       <h1 className="text-xl font-semibold">
-        Предельный цикл системы типа Ван дер Поля
+        Фазовый портрет системы усредненной системы
       </h1>
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full h-full">
         <div className="flex flex-col gap-2 p-4">
@@ -106,7 +106,7 @@ export const VanDerPol3DPlot = () => {
             variant="outline"
             size="sm"
             onClick={resetValues}
-            className="max-w-fit"
+            className="max-w-fit cursor-pointer"
           >
             Сбросить значения
           </Button>
@@ -151,6 +151,9 @@ export const VanDerPol3DPlot = () => {
               value={value}
               resetKey={resetKey}
               onChange={(v) => onChange(key, v)}
+              addTrajectory={function (): void {
+                throw new Error("Function not implemented.");
+              }}
             />
           ))}
 
@@ -188,7 +191,6 @@ export const VanDerPol3DPlot = () => {
                       variant="destructive"
                       size="sm"
                       onClick={() => removeTrajectory(index)}
-                      className="hover:cursor-pointer hover:opacity-90"
                     >
                       Удалить
                     </Button>
@@ -199,22 +201,26 @@ export const VanDerPol3DPlot = () => {
           )}
         </div>
 
-        <div className="relative w-full md:w-[50%] min-h-[619px] h-full">
+        <div className="relative w-full md:w-[50%] h-full min-h-[600px]">
           {isPending ? (
             <FullContainerLoader />
           ) : (
             <Plot
-              className="w-full min-w-[375px] min-h-[619px] h-full"
+              className="w-full h-full"
               data={plotData}
               layout={{
-                title: "Предельный цикл",
+                title: "Фазовый портрет",
                 autosize: true,
-                scene: {
-                  xaxis: { title: "x" },
-                  yaxis: { title: "y" },
-                  zaxis: { title: "z", range: [-1, 1] },
+                height: 600,
+                margin: { l: 40, r: 40, t: 40, b: 40 },
+                xaxis: { title: "u1", range: [0, 9] },
+                yaxis: {
+                  title: "u2",
+                  range: [-1, 1],
                 },
+                showlegend: false,
               }}
+              useResizeHandler
               config={{ displaylogo: false }}
             />
           )}

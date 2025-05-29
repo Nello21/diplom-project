@@ -1,5 +1,6 @@
-import { Graphics } from "@/pages/graphics";
+import { RouterProvider } from "react-router/dom";
+import { routerConfig } from "./router";
 
 export const App = () => {
-  return <Graphics />;
+  return <RouterProvider router={routerConfig} />;
 };

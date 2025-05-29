@@ -48,7 +48,7 @@ export const VanDerPol3DPlot = () => {
   return (
     <div className="flex flex-col items-center w-full h-full">
       <h1 className="text-xl font-semibold text-center">
-        Предельный цикл системы типа Ван дер Поля с автоматической регулировкой
+        Фазовый портрет системы типа Ван дер Поля с автоматической регулировкой
         частоты
       </h1>
       <div className="p-4">

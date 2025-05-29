@@ -61,7 +61,6 @@ export const useGraphicValues = () => {
 
   const resetValues = () => {
     setValues(initialValues);
-    setTrajectories([]);
     setColor("#aabbcc");
     setLineWidth("2");
     setIntegrationTime(INTEGRATION_STEP_COUNT * 0.001);

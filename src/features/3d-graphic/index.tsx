@@ -126,7 +126,7 @@ export const VanDerPol3DPlot = () => {
               </PopoverTrigger>
               <PopoverContent
                 align="start"
-                className="flex flex-col gap-2 w-full p-4 bg-gray-100/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
+                className="flex flex-col gap-2 w-full p-4 bg-background/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
               >
                 {Object.entries(values).map(([key, value]) => {
                   if (
@@ -157,35 +157,29 @@ export const VanDerPol3DPlot = () => {
                         />
                       </div>
                     );
-                  } else if (key === "dt") {
-                    return (
-                      <div
-                        key={key}
-                        className="grid grid-cols-[9rem_minmax(auto,max-content)_2.25rem] gap-2 items-start"
-                      >
-                        <label
-                          htmlFor={key}
-                          className="select-none font-medium"
-                        >
-                          Шаг интегрирования:
-                        </label>
-                        <ParameterInput
-                          label={key}
-                          value={value}
-                          resetKey={resetKey}
-                          onChange={handleChangeDt}
-                          backup={true}
-                          isValidText={true}
-                          addTrajectory={addTrajectory}
-                        />
-                      </div>
-                    );
                   }
                 })}
               </PopoverContent>
             </Popover>
           </div>
 
+          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
+            <label
+              htmlFor="integr-time"
+              className="max-w-[8rem] text-wrap break-words select-none"
+            >
+              Шаг интегрирования:
+            </label>
+            <ParameterInput
+              label={"integr-step"}
+              value={values.dt}
+              resetKey={resetKey}
+              onChange={handleChangeDt}
+              backup={true}
+              isValidText={true}
+              addTrajectory={addTrajectory}
+            />
+          </div>
           <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
             <label
               htmlFor="integr-time"
@@ -244,7 +238,7 @@ export const VanDerPol3DPlot = () => {
               </PopoverTrigger>
               <PopoverContent
                 align="start"
-                className="w-full p-0 bg-gray-100/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
+                className="w-full p-0 bg-background/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
               >
                 <div className="w-full flex flex-col">
                   <div className="grid grid-cols-2 items-start gap-2 p-2">

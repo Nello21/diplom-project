@@ -81,21 +81,6 @@ export const VanDerPol3DPlot = () => {
 
             <div className="flex gap-2">
               <Checkbox
-                id="forward"
-                checked={values.dt > 0}
-                onCheckedChange={(checked) =>
-                  onChange("dt", Math.abs(values.dt) * (checked ? 1 : -1))
-                }
-              />
-              <label
-                htmlFor="forward"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Прямой шаг
-              </label>
-            </div>
-            <div className="flex gap-2">
-              <Checkbox
                 id="backward"
                 checked={values.dt < 0}
                 onCheckedChange={(checked) =>
@@ -111,62 +96,34 @@ export const VanDerPol3DPlot = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
-            <label
-              htmlFor="integr-time"
-              className="max-w-[8rem] text-wrap break-words select-none"
-            >
-              Параметры системы:
-            </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button id="traj-params" className="cursor-pointer">
-                  Выбрать
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className="flex flex-col gap-2 w-full p-4 bg-background/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
-              >
-                {Object.entries(values).map(([key, value]) => {
-                  if (
-                    key !== "x0" &&
-                    key !== "y0" &&
-                    key !== "z0" &&
-                    key !== "dt"
-                  ) {
-                    return (
-                      <div
-                        key={key}
-                        className="grid grid-cols-[9rem_minmax(auto,max-content)_2.25rem] gap-2 items-center"
-                      >
-                        <label
-                          htmlFor={key}
-                          className="select-none font-medium"
-                        >
-                          {key === "dt" ? "Шаг интегрирования" : key}:
-                        </label>
-                        <ParameterInput
-                          label={key}
-                          value={value}
-                          resetKey={resetKey}
-                          onChange={(v) => onChange(key, v)}
-                          backup={true}
-                          isValidText={true}
-                          addTrajectory={addTrajectory}
-                        />
-                      </div>
-                    );
-                  }
-                })}
-              </PopoverContent>
-            </Popover>
-          </div>
+          {Object.entries(values).map(([key, value]) => {
+            if (key !== "x0" && key !== "y0" && key !== "z0" && key !== "dt") {
+              return (
+                <div
+                  key={key}
+                  className="grid grid-cols-[12.5rem_minmax(auto,max-content)_2.25rem] gap-2 items-center"
+                >
+                  <label htmlFor={key} className="select-none">
+                    {`Параметр ${key}`}:
+                  </label>
+                  <ParameterInput
+                    label={key}
+                    value={value}
+                    resetKey={resetKey}
+                    onChange={(v) => onChange(key, v)}
+                    backup={true}
+                    isValidText={true}
+                    addTrajectory={addTrajectory}
+                  />
+                </div>
+              );
+            }
+          })}
 
-          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
             <label
               htmlFor="integr-time"
-              className="max-w-[8rem] text-wrap break-words select-none"
+              className="max-w-[12.5rem] text-wrap break-words select-none"
             >
               Шаг интегрирования:
             </label>
@@ -180,10 +137,10 @@ export const VanDerPol3DPlot = () => {
               addTrajectory={addTrajectory}
             />
           </div>
-          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
             <label
               htmlFor="integr-time"
-              className="max-w-[8rem] text-wrap break-words select-none"
+              className="max-w-[12.5rem] text-wrap break-words select-none"
             >
               Время интегрирования:
             </label>
@@ -197,10 +154,10 @@ export const VanDerPol3DPlot = () => {
             />
           </div>
 
-          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] gap-2 items-start">
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
             <label
               htmlFor="x0"
-              className="max-w-[8rem] text-wrap break-words select-none"
+              className="max-w-[12.5rem] text-wrap break-words select-none"
             >
               Начальные значения
             </label>
@@ -228,7 +185,7 @@ export const VanDerPol3DPlot = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-[9rem_minmax(auto,max-content)] items-start gap-2">
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] items-start gap-2">
             <label htmlFor="traj-params">Параметры траектории:</label>
             <Popover>
               <PopoverTrigger asChild>

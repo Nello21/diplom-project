@@ -320,6 +320,7 @@ export const VanDerPol3DPlot = () => {
                   </Button>
                 </div>
               ))}
+              {!trajectories.length && "Нет траекторий"}
             </div>
           </div>
         </div>

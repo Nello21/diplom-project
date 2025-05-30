@@ -97,6 +97,7 @@ export const simulateVanDerPol = ({
   x0 = 1,
   y0 = 0,
   z0 = 0,
+  steps = 10000,
   method = "euler",
 }: GraphicParameters) => {
   let state: IntegrationState = { x: x0, y: y0, z: z0 };
@@ -104,7 +105,7 @@ export const simulateVanDerPol = ({
   const ys = [];
   const zs = [];
 
-  for (let i = 0; i < 8000; i++) {
+  for (let i = 0; i < steps; i++) {
     state = integrate(method, state, dt, ε, α, β);
     xs.push(state.x);
     ys.push(state.y);

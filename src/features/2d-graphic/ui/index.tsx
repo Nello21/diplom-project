@@ -1,0 +1,303 @@
+import Plot from "react-plotly.js";
+import { ParameterInput } from "../../../shared/components/parameter-input";
+import { HexColorPicker } from "react-colorful";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { Button } from "@/shared/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import { IntegrationMethod } from "@/shared/types";
+import "katex/dist/katex.min.css";
+import { BlockMath } from "react-katex";
+import { Input } from "@/shared/components/ui/input";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { useAveragedGraphicValues } from "../model/use-graphic-values";
+import { ROUTES } from "@/shared/consts/routes";
+import { useNavigate, useLocation } from "react-router";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
+export const PhasePortrait = () => {
+  const {
+    values,
+    plotData,
+    trajectories,
+    method,
+    color,
+    lineWidth,
+    resetKey,
+    // isPending,
+    setColor,
+    setMethod,
+    setLineWidth,
+    onChange,
+    resetValues,
+    addTrajectory,
+    removeAllTrajectories,
+    removeLastTrajectory,
+    removeTrajectory,
+  } = useAveragedGraphicValues();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className="flex flex-col items-center w-full h-full">
+      <div className="w-full flex justify-between gap-2">
+        <Button
+          size="sm"
+          disabled={location.pathname === ROUTES.vanderpol}
+          onClick={() => navigate(ROUTES.vanderpol)}
+        >
+          <span className="hidden lg:inline">Предыдущий график</span>
+          <ArrowLeft className="lg:hidden w-4 h-4" />
+        </Button>
+
+        <h1 className="text-xl font-semibold text-center">
+          Фазовый портрет усредненной системы
+        </h1>
+
+        <Button
+          size="sm"
+          disabled={location.pathname === ROUTES.averagedSystem}
+          onClick={() => navigate(ROUTES.averagedSystem)}
+        >
+          <span className="hidden lg:inline">Следующий график</span>
+          <ArrowRight className="lg:hidden w-4 h-4" />
+        </Button>
+      </div>
+      <div className="p-4">
+        <BlockMath>
+          {String.raw`
+            \begin{cases}
+            \dot{u}_1 = \varepsilon u_1 \left( \alpha - \dfrac{u_1}{2(1 + u_2^2)^{3/2}} \left(1 - (1 + \beta)u_2 + u_2^2 - \beta u_2^3 \right) \right), \\
+            \dot{u}_2 = \varepsilon \dfrac{u_1}{\sqrt{1 + u_2^2}} \left(1 - \beta - \beta u_2^2 \right).
+            \end{cases}
+            `}
+        </BlockMath>
+      </div>
+      <div className="flex flex-col md:flex-row items-start justify-center w-full h-full">
+        <div className="w-full max-w-[700px] flex flex-col gap-2 p-4">
+          <div className="flex flex-col gap-2">
+            <Select
+              value={method}
+              onValueChange={(value) => setMethod(value as IntegrationMethod)}
+            >
+              <SelectTrigger className="w-fit">
+                <SelectValue placeholder="Методы счета" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="euler">Метод Эйлера</SelectItem>
+                <SelectItem value="rk4">Рунге-Кутта 4-го порядка</SelectItem>
+                <SelectItem value="adams">Метод Адамса</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-2">
+              <Checkbox
+                id="backward"
+                checked={values.dt < 0}
+                onCheckedChange={(checked) =>
+                  onChange("dt", Math.abs(values.dt) * (checked ? -1 : 1))
+                }
+              />
+              <label
+                htmlFor="backward"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Обратный шаг
+              </label>
+            </div>
+          </div>
+
+          {Object.entries(values).map(([key, value]) => {
+            if (key !== "x0" && key !== "y0") {
+              return (
+                <div
+                  key={key}
+                  className="grid grid-cols-[12.5rem_minmax(auto,max-content)_2.25rem] gap-2 items-center"
+                >
+                  <label htmlFor={key} className="select-none">
+                    {key === "dt"
+                      ? "Шаг интегрирования"
+                      : key === "intTime"
+                      ? "Время интегрирования"
+                      : `Параметр ${key}`}
+                  </label>
+                  <ParameterInput
+                    label={key}
+                    value={value}
+                    resetKey={resetKey}
+                    onChange={(v) => onChange(key, v)}
+                    backup={true}
+                    isValidText={true}
+                    addTrajectory={addTrajectory}
+                  />
+                </div>
+              );
+            }
+          })}
+
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
+            <label
+              htmlFor="x0"
+              className="max-w-[12.5rem] text-wrap break-words select-none"
+            >
+              Начальные значения
+            </label>
+
+            <div className="flex items-center gap-1">
+              <span>(</span>
+              {Object.entries({
+                x0: values.x0,
+                y0: values.y0,
+              }).map(([key, value], index, array) => (
+                <div key={key} className="flex items-center gap-1">
+                  <ParameterInput
+                    label={key}
+                    value={value}
+                    resetKey={resetKey}
+                    onChange={(v) => onChange(key, v)}
+                    addTrajectory={addTrajectory}
+                    className="max-w-[5rem]"
+                  />
+                  {index < array.length - 1 && <span>,</span>}
+                </div>
+              ))}
+              <span>)</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] items-start gap-2">
+            <label htmlFor="traj-params">Параметры траектории:</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button id="traj-params" className="cursor-pointer">
+                  Выбрать
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="w-full p-0 bg-background/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
+              >
+                <div className="w-full flex flex-col">
+                  <div className="grid grid-cols-2 items-start gap-2 p-2">
+                    <label htmlFor="line-width" className="font-medium text-md">
+                      Толщина линии:
+                    </label>
+                    <Input
+                      id="line-width"
+                      type="number"
+                      min={0}
+                      max={10}
+                      value={lineWidth}
+                      onChange={(e) => setLineWidth(e.target.value)}
+                      className="max-w-[5rem] bg-background"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 items-start gap-2 p-2">
+                    <label htmlFor="color" className="font-medium text-md">
+                      Цвет линии:
+                    </label>
+                    <HexColorPicker
+                      id="color"
+                      className="w-full"
+                      color={color}
+                      onChange={setColor}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetValues}
+            className="max-w-fit bg-gray-500 text-background hover:bg-gray-500/80 hover:text-background"
+          >
+            Сбросить значения
+          </Button>
+
+          {/* Поля для начальных условий */}
+          <div className="flex gap-2 items-center mt-4">
+            <Button onClick={addTrajectory} className="w-fit">
+              Добавить траекторию
+            </Button>
+            {trajectories.length >= 2 && (
+              <Button onClick={removeLastTrajectory} className="max-w-fit">
+                Убрать последнюю
+              </Button>
+            )}
+          </div>
+
+          {/* Список траекторий с возможностью удаления */}
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={removeAllTrajectories}
+              className="max-w-fit bg-gray-500 text-background hover:bg-gray-500/80 hover:text-background"
+            >
+              Очистить траектории
+            </Button>
+            <h3 className="font-medium">Траектории:</h3>
+            <div className="w-fit pr-4 max-h-60 overflow-y-auto">
+              {trajectories.map((_, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between gap-4 py-1"
+                >
+                  <span>Траектория {index}</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => removeTrajectory(index)}
+                    className="hover:cursor-pointer hover:opacity-90"
+                  >
+                    Удалить
+                  </Button>
+                </div>
+              ))}
+              {!trajectories.length && "Нет траекторий"}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative flex items-start justify-center w-full h-full max-w-[700px] min-h-[600px]">
+          {/* {isPending ? (
+            <FullContainerLoader />
+          ) : ( */}
+          <Plot
+            className="w-full h-full"
+            data={plotData}
+            layout={{
+              title: "Фазовый портрет",
+              autosize: true,
+              height: 600,
+              margin: { l: 40, r: 40, t: 40, b: 40 },
+              xaxis: { title: "u1", range: [0, 9] },
+              yaxis: {
+                title: "u2",
+                range: [-1, 1],
+              },
+
+              showlegend: false,
+            }}
+            useResizeHandler
+            config={{ displaylogo: false, responsive: true }}
+          />
+          {/* )} */}
+        </div>
+      </div>
+    </div>
+  );
+};

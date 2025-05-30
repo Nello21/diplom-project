@@ -8,6 +8,8 @@ export type GraphicParameters = {
   x0: number;
   y0: number;
   z0: number;
+  intTime: number;
+  steps: number;
   method: IntegrationMethod;
 };
 

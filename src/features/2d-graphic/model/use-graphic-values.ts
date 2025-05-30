@@ -1,15 +1,15 @@
-import { simulateVanDerPol } from "@/shared/functions/3d-van-der-pol";
+import { computeTrajectory } from "@/shared/functions/averaged-system";
 import {
   GraphicParameters,
   IntegrationMethod,
-  ZTrajectory,
+  UTrajectory,
 } from "@/shared/types";
 import { Data } from "plotly.js";
 import { useState, useMemo } from "react";
 
-type ValuesType = Omit<GraphicParameters, "method" | "steps">;
+type ValuesType = Omit<GraphicParameters, "method" | "steps" | "z0">;
 
-export const useGraphicValues = () => {
+export const useAveragedGraphicValues = () => {
   const initialValues: ValuesType = {
     ε: 0.05,
     α: 1,
@@ -18,7 +18,6 @@ export const useGraphicValues = () => {
     intTime: 10,
     x0: 1,
     y0: 0,
-    z0: 0,
   };
 
   //   const [isPending, startTransition] = useTransition();
@@ -28,7 +27,7 @@ export const useGraphicValues = () => {
   const [method, setMethod] = useState<IntegrationMethod>("euler");
   const [values, setValues] = useState<ValuesType>(initialValues);
 
-  const [trajectories, setTrajectories] = useState<ZTrajectory[]>([]);
+  const [trajectories, setTrajectories] = useState<UTrajectory[]>([]);
 
   const onChange = (key: string, value: number) => {
     setValues((prev) => ({
@@ -45,7 +44,7 @@ export const useGraphicValues = () => {
   };
 
   const addTrajectory = () => {
-    const newTrajectory = simulateVanDerPol({
+    const newTrajectory = computeTrajectory({
       ...values,
       steps: values.intTime / values.dt,
       method,
@@ -56,17 +55,15 @@ export const useGraphicValues = () => {
       { ...newTrajectory, color, lineWidth: Number(lineWidth) },
     ]);
 
-    const lastIndex = newTrajectory.xs.length - 1;
+    const lastIndex = newTrajectory.u1s.length - 1;
     if (lastIndex >= 0) {
-      const newX0 = newTrajectory.xs[lastIndex];
-      const newY0 = newTrajectory.ys[lastIndex];
-      const newZ0 = newTrajectory.zs[lastIndex];
+      const newU1 = newTrajectory.u1s[lastIndex];
+      const newU2 = newTrajectory.u2s[lastIndex];
 
       setValues((prev) => ({
         ...prev,
-        x0: newX0,
-        y0: newY0,
-        z0: newZ0,
+        x0: newU1,
+        y0: newU2,
       }));
     }
   };
@@ -87,21 +84,19 @@ export const useGraphicValues = () => {
     if (trajectories.length === 0) {
       return [
         {
-          type: "scatter3d",
+          type: "scatter",
           mode: "lines",
-          x: [1],
-          y: [1],
-          z: [1],
+          x: [0],
+          y: [0],
         },
       ];
     }
 
     return trajectories.map((trajectory) => ({
-      type: "scatter3d",
+      type: "scatter",
       mode: "lines",
-      x: trajectory.xs,
-      y: trajectory.ys,
-      z: trajectory.zs,
+      x: trajectory.u1s,
+      y: trajectory.u2s,
       line: { width: trajectory.lineWidth, color: trajectory.color },
     }));
   }, [trajectories]);

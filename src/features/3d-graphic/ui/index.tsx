@@ -1,5 +1,5 @@
 import Plot from "react-plotly.js";
-import { ParameterInput } from "../../shared/components/parameter-input";
+import { ParameterInput } from "../../../shared/components/parameter-input";
 import { HexColorPicker } from "react-colorful";
 import {
   Popover,
@@ -17,9 +17,12 @@ import {
 import { IntegrationMethod } from "@/shared/types";
 import "katex/dist/katex.min.css";
 import { BlockMath } from "react-katex";
-import { useGraphicValues } from "./model/use-graphic-values";
+import { useGraphicValues } from "../model/use-graphic-values";
 import { Input } from "@/shared/components/ui/input";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { useLocation, useNavigate } from "react-router";
+import { ROUTES } from "@/shared/consts/routes";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export const VanDerPol3DPlot = () => {
   const {
@@ -30,10 +33,7 @@ export const VanDerPol3DPlot = () => {
     color,
     lineWidth,
     resetKey,
-    integrationTime,
     // isPending,
-    handleSetIntegrationTime,
-    handleChangeDt,
     setColor,
     setMethod,
     setLineWidth,
@@ -45,12 +45,35 @@ export const VanDerPol3DPlot = () => {
     removeTrajectory,
   } = useGraphicValues();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <h1 className="text-xl font-semibold text-center">
-        Фазовый портрет системы типа Ван дер Поля с автоматической регулировкой
-        частоты
-      </h1>
+      <div className="w-full flex justify-between gap-2">
+        <Button
+          size="sm"
+          disabled={location.pathname === ROUTES.vanderpol}
+          onClick={() => navigate(ROUTES.vanderpol)}
+        >
+          <span className="hidden lg:inline">Предыдущий график</span>
+          <ArrowLeft className="lg:hidden w-4 h-4" />
+        </Button>
+
+        <h1 className="text-xl font-semibold text-center">
+          Фазовый портрет системы типа Ван дер Поля с автоматической
+          регулировкой частоты
+        </h1>
+
+        <Button
+          size="sm"
+          disabled={location.pathname === ROUTES.averagedSystem}
+          onClick={() => navigate(ROUTES.averagedSystem)}
+        >
+          <span className="hidden lg:inline">Следующий график</span>
+          <ArrowRight className="lg:hidden w-4 h-4" />
+        </Button>
+      </div>
       <div className="p-4">
         <BlockMath>
           {String.raw`
@@ -97,14 +120,18 @@ export const VanDerPol3DPlot = () => {
           </div>
 
           {Object.entries(values).map(([key, value]) => {
-            if (key !== "x0" && key !== "y0" && key !== "z0" && key !== "dt") {
+            if (key !== "x0" && key !== "y0" && key !== "z0") {
               return (
                 <div
                   key={key}
                   className="grid grid-cols-[12.5rem_minmax(auto,max-content)_2.25rem] gap-2 items-center"
                 >
                   <label htmlFor={key} className="select-none">
-                    {`Параметр ${key}`}:
+                    {key === "dt"
+                      ? "Шаг интегрирования"
+                      : key === "intTime"
+                      ? "Время интегрирования"
+                      : `Параметр ${key}`}
                   </label>
                   <ParameterInput
                     label={key}
@@ -119,40 +146,6 @@ export const VanDerPol3DPlot = () => {
               );
             }
           })}
-
-          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
-            <label
-              htmlFor="integr-time"
-              className="max-w-[12.5rem] text-wrap break-words select-none"
-            >
-              Шаг интегрирования:
-            </label>
-            <ParameterInput
-              label={"integr-step"}
-              value={values.dt}
-              resetKey={resetKey}
-              onChange={handleChangeDt}
-              backup={true}
-              isValidText={true}
-              addTrajectory={addTrajectory}
-            />
-          </div>
-          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
-            <label
-              htmlFor="integr-time"
-              className="max-w-[12.5rem] text-wrap break-words select-none"
-            >
-              Время интегрирования:
-            </label>
-            <ParameterInput
-              label={"integr-time"}
-              value={integrationTime}
-              resetKey={resetKey}
-              onChange={(value) => handleSetIntegrationTime(value)}
-              addTrajectory={addTrajectory}
-              className="max-w-[5rem]"
-            />
-          </div>
 
           <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
             <label
@@ -237,7 +230,6 @@ export const VanDerPol3DPlot = () => {
             Сбросить значения
           </Button>
 
-          {/* Поля для начальных условий */}
           <div className="flex gap-2 items-center mt-4">
             <Button onClick={addTrajectory} className="w-fit">
               Добавить траекторию
@@ -249,7 +241,6 @@ export const VanDerPol3DPlot = () => {
             )}
           </div>
 
-          {/* Список траекторий с возможностью удаления */}
           <div className="flex flex-col gap-2">
             <Button
               variant="outline"
@@ -300,6 +291,7 @@ export const VanDerPol3DPlot = () => {
               },
             }}
             config={{
+              responsive: true,
               displaylogo: false,
             }}
             useResizeHandler={true}

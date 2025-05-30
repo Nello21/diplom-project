@@ -47,7 +47,7 @@ export const useGraphicValues = () => {
   const addTrajectory = () => {
     const newTrajectory = simulateVanDerPol({
       ...values,
-      steps: values.intTime / values.dt,
+      steps: Math.abs(values.intTime / values.dt),
       method,
     });
 

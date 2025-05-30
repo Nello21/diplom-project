@@ -46,7 +46,7 @@ export const useAveragedGraphicValues = () => {
   const addTrajectory = () => {
     const newTrajectory = computeTrajectory({
       ...values,
-      steps: values.intTime / values.dt,
+      steps: Math.abs(values.intTime / values.dt),
       method,
     });
 

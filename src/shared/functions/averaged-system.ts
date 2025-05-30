@@ -86,13 +86,14 @@ export const computeTrajectory = ({
   dt = 0.01,
   x0 = 1, // u1
   y0 = 0, // u2
+  steps = 10000,
   method = "euler",
 }: Omit<GraphicParameters, "z0">) => {
   let state: IntegrationState = { u1: x0, u2: y0 };
   const u1s = [];
   const u2s = [];
 
-  for (let i = 0; i < 8000; i++) {
+  for (let i = 0; i < steps; i++) {
     state = integrate(method, state, dt, ε, α, β);
     u1s.push(state.u1);
     u2s.push(state.u2);

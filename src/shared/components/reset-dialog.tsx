@@ -24,7 +24,7 @@ export const ResetDialog = ({
         <DialogHeader>
           <DialogTitle>Подвердить сброс?</DialogTitle>
           <DialogDescription>
-            Вы поменяли параметры системы, желаете начал сначала?
+            Вы поменяли параметры системы, желаете начать сначала?
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2 justify-center">

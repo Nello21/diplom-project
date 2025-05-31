@@ -43,6 +43,15 @@ export const useAveragedGraphicValues = () => {
     setResetKey((prev) => prev + 1);
   };
 
+  const resetInitParams = () => {
+    setValues((prev) => ({
+      ...prev,
+      x0: initialValues.x0,
+      y0: initialValues.y0,
+    }));
+    setResetKey((prev) => prev + 1);
+  };
+
   const addTrajectory = () => {
     const newTrajectory = computeTrajectory({
       ...values,
@@ -127,6 +136,7 @@ export const useAveragedGraphicValues = () => {
     setLineWidth,
     onChange,
     resetValues,
+    resetInitParams,
     addTrajectory,
     removeAllTrajectories,
     removeLastTrajectory,

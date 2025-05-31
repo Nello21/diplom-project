@@ -29,6 +29,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
+import { useState } from "react";
+import { ResetDialog } from "@/shared/components/reset-dialog";
 
 type SystemParamKeys = keyof Pick<GraphicParameters, "ε" | "α" | "β">;
 
@@ -50,11 +52,16 @@ export const VanDerPol3DPlot = () => {
     setLineWidth,
     onChange,
     resetValues,
+    resetInitParams,
     addTrajectory,
     removeAllTrajectories,
     removeLastTrajectory,
     removeTrajectory,
   } = useGraphicValues();
+
+  const [isSystemParamsChanged, setIsSystemParamsChanged] =
+    useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -98,6 +105,75 @@ export const VanDerPol3DPlot = () => {
             \dot{z} = \varepsilon(x^2 - \beta y^2).
           \end{cases}`}
         </BlockMath>
+      </div>
+
+      {/* График */}
+      <div className="relative flex items-start justify-center w-full h-[90dvh]">
+        <Plot
+          className="w-full h-full"
+          data={plotData}
+          layout={{
+            title: "Предельный цикл",
+            autosize: true,
+            showlegend: false,
+            scene: {
+              xaxis: { title: "x" },
+              yaxis: { title: "y" },
+              zaxis: { title: "z", range: [-1, 1] },
+            },
+          }}
+          config={{
+            responsive: true,
+            displaylogo: false,
+          }}
+          useResizeHandler={true}
+        />
+      </div>
+
+      <div className="w-full flex flex-col items-start gap-2">
+        <Button onClick={addTrajectory} className="w-fit">
+          Добавить траекторию
+        </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-fit">
+              Управление траекториями
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetValues}
+                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Сбросить все значения
+              </Button>
+
+              {trajectories.length >= 2 && (
+                <Button
+                  onClick={removeLastTrajectory}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Убрать последнюю
+                </Button>
+              )}
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={removeAllTrajectories}
+                disabled={trajectories.length === 0}
+                className="w-full"
+              >
+                Очистить все траектории
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="flex flex-col items-start justify-between w-full h-full">
@@ -155,7 +231,6 @@ export const VanDerPol3DPlot = () => {
                         : "Время интегрирования"}
                     </label>
                     <ParameterInput
-                      label={key}
                       value={values[key]}
                       resetKey={resetKey}
                       onChange={(v) => onChange(key, v)}
@@ -189,10 +264,15 @@ export const VanDerPol3DPlot = () => {
                         : "β (beta)"}
                     </label>
                     <ParameterInput
-                      label={key}
+                      id={key}
                       value={values[key]}
                       resetKey={resetKey}
-                      onChange={(v) => onChange(key, v)}
+                      onChange={(v) => (
+                        onChange(key, v), setIsSystemParamsChanged(true)
+                      )}
+                      onBlur={() => {
+                        if (isSystemParamsChanged) setIsOpen(true);
+                      }}
                       backup={true}
                       isValidText={true}
                       addTrajectory={addTrajectory}
@@ -220,7 +300,7 @@ export const VanDerPol3DPlot = () => {
                   {initialConditionKeys.map((key, index, arr) => (
                     <div key={key} className="flex items-center gap-1">
                       <ParameterInput
-                        label={key}
+                        id={key}
                         value={values[key]}
                         resetKey={resetKey}
                         onChange={(v) => onChange(key, v)}
@@ -325,76 +405,14 @@ export const VanDerPol3DPlot = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="flex flex-col gap-2">
-          <Button onClick={addTrajectory} className="w-full">
-            Добавить траекторию
-          </Button>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-fit">
-                Управление траекториями
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="start">
-              <div className="flex flex-col gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetValues}
-                  className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-                >
-                  Сбросить все значения
-                </Button>
-
-                {trajectories.length >= 2 && (
-                  <Button
-                    onClick={removeLastTrajectory}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    Убрать последнюю
-                  </Button>
-                )}
-
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={removeAllTrajectories}
-                  disabled={trajectories.length === 0}
-                  className="w-full"
-                >
-                  Очистить все траектории
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* График */}
-        <div className="relative flex items-start justify-center w-full h-[90dvh]">
-          <Plot
-            className="w-full h-full"
-            data={plotData}
-            layout={{
-              title: "Предельный цикл",
-              autosize: true,
-              showlegend: false,
-              scene: {
-                xaxis: { title: "x" },
-                yaxis: { title: "y" },
-                zaxis: { title: "z", range: [-1, 1] },
-              },
-            }}
-            config={{
-              responsive: true,
-              displaylogo: false,
-            }}
-            useResizeHandler={true}
-          />
-        </div>
       </div>
+      <ResetDialog
+        isOpen={isOpen}
+        onClose={() => (setIsOpen(false), setIsSystemParamsChanged(false))}
+        onSubmit={() => {
+          removeAllTrajectories(), resetInitParams();
+        }}
+      />
     </div>
   );
 };

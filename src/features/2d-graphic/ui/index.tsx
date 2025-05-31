@@ -29,6 +29,8 @@ import {
   CardTitle,
   CardContent,
 } from "@/shared/components/ui/card";
+import { useState } from "react";
+import { ResetDialog } from "@/shared/components/reset-dialog";
 
 export const PhasePortrait = () => {
   const {
@@ -45,11 +47,16 @@ export const PhasePortrait = () => {
     setLineWidth,
     onChange,
     resetValues,
+    resetInitParams,
     addTrajectory,
-    removeAllTrajectories,
-    removeLastTrajectory,
     removeTrajectory,
+    removeLastTrajectory,
+    removeAllTrajectories,
   } = useAveragedGraphicValues();
+
+  const [isSystemParamsChanged, setIsSystemParamsChanged] =
+    useState<boolean>(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -92,6 +99,80 @@ export const PhasePortrait = () => {
             \end{cases}
             `}
         </BlockMath>
+      </div>
+
+      {/* График */}
+      <div className="relative flex items-start justify-center w-full h-[50dvh] min-h-[600px]">
+        <Plot
+          className="w-full h-[50dvh] min-h-[600px]"
+          data={plotData}
+          layout={{
+            title: "Фазовый портрет",
+            autosize: true,
+            showlegend: false,
+            height: 600,
+            xaxis: {
+              title: "u₁",
+              range: [0, 9],
+            },
+            yaxis: {
+              title: "u₂",
+              range: [-1, 1],
+            },
+          }}
+          config={{
+            responsive: true,
+            displaylogo: false,
+          }}
+          useResizeHandler={true}
+          onClick={handlePlotClick}
+        />
+      </div>
+
+      <div className="w-full flex flex-col items-start gap-2">
+        <Button onClick={addTrajectory} className="w-fit">
+          Добавить траекторию
+        </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-fit">
+              Управление траекториями
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="flex flex-col gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetValues}
+                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Сбросить все значения
+              </Button>
+
+              {trajectories.length >= 2 && (
+                <Button
+                  onClick={removeLastTrajectory}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Убрать последнюю
+                </Button>
+              )}
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={removeAllTrajectories}
+                disabled={trajectories.length === 0}
+                className="w-full"
+              >
+                Очистить все траектории
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="flex flex-col items-start justify-between w-full h-full">
@@ -152,7 +233,7 @@ export const PhasePortrait = () => {
                         : "Время интегрирования"}
                     </label>
                     <ParameterInput
-                      label={key}
+                      id={key}
                       value={values[key]}
                       resetKey={resetKey}
                       onChange={(v) => onChange(key, v)}
@@ -186,10 +267,15 @@ export const PhasePortrait = () => {
                         : "β (beta)"}
                     </label>
                     <ParameterInput
-                      label={key}
+                      id={key}
                       value={values[key]}
                       resetKey={resetKey}
-                      onChange={(v) => onChange(key, v)}
+                      onChange={(v) => (
+                        onChange(key, v), setIsSystemParamsChanged(true)
+                      )}
+                      onBlur={() => {
+                        if (isSystemParamsChanged) setIsOpen(true);
+                      }}
                       backup={true}
                       isValidText={true}
                       addTrajectory={addTrajectory}
@@ -217,7 +303,7 @@ export const PhasePortrait = () => {
                   {initialConditionKeys.map((key, index, arr) => (
                     <div key={key} className="flex items-center gap-1">
                       <ParameterInput
-                        label={key}
+                        id={key}
                         value={values[key]}
                         resetKey={resetKey}
                         onChange={(v) => onChange(key, v)}
@@ -320,81 +406,14 @@ export const PhasePortrait = () => {
             </CardContent>
           </Card>
         </div>
-
-        <div className="flex flex-col gap-2">
-          <Button onClick={addTrajectory} className="w-full">
-            Добавить траекторию
-          </Button>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-fit">
-                Управление траекториями
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="start">
-              <div className="flex flex-col gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetValues}
-                  className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-                >
-                  Сбросить все значения
-                </Button>
-
-                {trajectories.length >= 2 && (
-                  <Button
-                    onClick={removeLastTrajectory}
-                    variant="secondary"
-                    className="w-full"
-                  >
-                    Убрать последнюю
-                  </Button>
-                )}
-
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={removeAllTrajectories}
-                  disabled={trajectories.length === 0}
-                  className="w-full"
-                >
-                  Очистить все траектории
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* График */}
-        <div className="relative flex items-start justify-center w-full h-[50dvh] min-h-[600px]">
-          <Plot
-            className="w-full h-[50dvh] min-h-[600px]"
-            data={plotData}
-            layout={{
-              title: "Фазовый портрет",
-              autosize: true,
-              showlegend: false,
-              height: 600,
-              xaxis: {
-                title: "u₁",
-                range: [0, 9],
-              },
-              yaxis: {
-                title: "u₂",
-                range: [-1, 1],
-              },
-            }}
-            config={{
-              responsive: true,
-              displaylogo: false,
-            }}
-            useResizeHandler={true}
-            onClick={handlePlotClick}
-          />
-        </div>
       </div>
+      <ResetDialog
+        isOpen={isOpen}
+        onClose={() => (setIsOpen(false), setIsSystemParamsChanged(false))}
+        onSubmit={() => {
+          removeAllTrajectories(), resetInitParams();
+        }}
+      />
     </div>
   );
 };

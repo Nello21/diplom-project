@@ -49,6 +49,7 @@ export const useGraphicValues = () => {
       ...prev,
       x0: initialValues.x0,
       y0: initialValues.y0,
+      z0: initialValues.z0,
     }));
     setResetKey((prev) => prev + 1);
   };

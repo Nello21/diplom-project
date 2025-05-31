@@ -4,7 +4,7 @@ import {
   IntegrationMethod,
   UTrajectory,
 } from "@/shared/types";
-import { Data } from "plotly.js";
+import { Data, PlotMouseEvent } from "plotly.js";
 import { useState, useMemo } from "react";
 
 type ValuesType = Omit<GraphicParameters, "method" | "steps" | "z0">;
@@ -101,6 +101,17 @@ export const useAveragedGraphicValues = () => {
     }));
   }, [trajectories]);
 
+  const handlePlotClick = (e: PlotMouseEvent) => {
+    if (e?.points?.length > 0) {
+      const point = e.points[0];
+      if (typeof point.x === "number" && typeof point.y === "number") {
+        onChange("x0", point.x);
+        onChange("y0", point.y);
+      }
+      console.log("Clicked point:", point);
+    }
+  };
+
   return {
     plotData,
     values,
@@ -110,6 +121,7 @@ export const useAveragedGraphicValues = () => {
     lineWidth,
     resetKey,
     // isPending,
+    handlePlotClick,
     setColor,
     setMethod,
     setLineWidth,

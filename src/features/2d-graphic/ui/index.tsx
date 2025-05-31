@@ -22,7 +22,13 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useAveragedGraphicValues } from "../model/use-graphic-values";
 import { ROUTES } from "@/shared/consts/routes";
 import { useNavigate, useLocation } from "react-router";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/shared/components/ui/card";
 
 export const PhasePortrait = () => {
   const {
@@ -33,7 +39,7 @@ export const PhasePortrait = () => {
     color,
     lineWidth,
     resetKey,
-    // isPending,
+    handlePlotClick,
     setColor,
     setMethod,
     setLineWidth,
@@ -48,6 +54,10 @@ export const PhasePortrait = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const systemParamKeys = ["ε", "α", "β"] as const;
+  const numericSettingKeys = ["dt", "intTime"] as const;
+  const initialConditionKeys = ["x0", "y0"] as const;
+
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div className="w-full flex justify-between gap-2">
@@ -56,7 +66,7 @@ export const PhasePortrait = () => {
           disabled={location.pathname === ROUTES.vanderpol}
           onClick={() => navigate(ROUTES.vanderpol)}
         >
-          <span className="hidden lg:inline">Предыдущий график</span>
+          <span className="hidden lg:inline">Исходная система</span>
           <ArrowLeft className="lg:hidden w-4 h-4" />
         </Button>
 
@@ -69,7 +79,7 @@ export const PhasePortrait = () => {
           disabled={location.pathname === ROUTES.averagedSystem}
           onClick={() => navigate(ROUTES.averagedSystem)}
         >
-          <span className="hidden lg:inline">Следующий график</span>
+          <span className="hidden lg:inline">Усредненная система</span>
           <ArrowRight className="lg:hidden w-4 h-4" />
         </Button>
       </div>
@@ -83,219 +93,301 @@ export const PhasePortrait = () => {
             `}
         </BlockMath>
       </div>
-      <div className="flex flex-col md:flex-row items-start justify-center w-full h-full">
-        <div className="w-full max-w-[700px] flex flex-col gap-2 p-4">
-          <div className="flex flex-col gap-2">
-            <Select
-              value={method}
-              onValueChange={(value) => setMethod(value as IntegrationMethod)}
-            >
-              <SelectTrigger className="w-fit">
-                <SelectValue placeholder="Методы счета" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="euler">Метод Эйлера</SelectItem>
-                <SelectItem value="rk4">Рунге-Кутта 4-го порядка</SelectItem>
-                <SelectItem value="adams">Метод Адамса</SelectItem>
-              </SelectContent>
-            </Select>
 
-            <div className="flex gap-2">
-              <Checkbox
-                id="backward"
-                checked={values.dt < 0}
-                onCheckedChange={(checked) =>
-                  onChange("dt", Math.abs(values.dt) * (checked ? -1 : 1))
-                }
-              />
-              <label
-                htmlFor="backward"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Обратный шаг
-              </label>
-            </div>
-          </div>
-
-          {Object.entries(values).map(([key, value]) => {
-            if (key !== "x0" && key !== "y0") {
-              return (
-                <div
-                  key={key}
-                  className="grid grid-cols-[12.5rem_minmax(auto,max-content)_2.25rem] gap-2 items-center"
-                >
-                  <label htmlFor={key} className="select-none">
-                    {key === "dt"
-                      ? "Шаг интегрирования"
-                      : key === "intTime"
-                      ? "Время интегрирования"
-                      : `Параметр ${key}`}
+      <div className="flex flex-col items-start justify-between w-full h-full">
+        <div className="w-full justify-around flex flex-1 gap-4 p-4">
+          {/* Группа: Настройки счёта */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-gray-500 font-medium">
+                Настройки счёта
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-gray-600 text-sm mb-1 block">
+                    Метод интегрирования
                   </label>
-                  <ParameterInput
-                    label={key}
-                    value={value}
-                    resetKey={resetKey}
-                    onChange={(v) => onChange(key, v)}
-                    backup={true}
-                    isValidText={true}
-                    addTrajectory={addTrajectory}
-                  />
-                </div>
-              );
-            }
-          })}
-
-          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] gap-2 items-start">
-            <label
-              htmlFor="x0"
-              className="max-w-[12.5rem] text-wrap break-words select-none"
-            >
-              Начальные значения
-            </label>
-
-            <div className="flex items-center gap-1">
-              <span>(</span>
-              {Object.entries({
-                x0: values.x0,
-                y0: values.y0,
-              }).map(([key, value], index, array) => (
-                <div key={key} className="flex items-center gap-1">
-                  <ParameterInput
-                    label={key}
-                    value={value}
-                    resetKey={resetKey}
-                    onChange={(v) => onChange(key, v)}
-                    addTrajectory={addTrajectory}
-                    className="max-w-[5rem]"
-                  />
-                  {index < array.length - 1 && <span>,</span>}
-                </div>
-              ))}
-              <span>)</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-[12.5rem_minmax(auto,max-content)] items-start gap-2">
-            <label htmlFor="traj-params">Параметры траектории:</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button id="traj-params" className="cursor-pointer">
-                  Выбрать
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className="w-full p-0 bg-background/50 backdrop-blur-md shadow-[inset_0_0_0_2px_rgba(255,255,255,0.6)] rounded-xl"
-              >
-                <div className="w-full flex flex-col">
-                  <div className="grid grid-cols-2 items-start gap-2 p-2">
-                    <label htmlFor="line-width" className="font-medium text-md">
-                      Толщина линии:
-                    </label>
-                    <Input
-                      id="line-width"
-                      type="number"
-                      min={0}
-                      max={10}
-                      value={lineWidth}
-                      onChange={(e) => setLineWidth(e.target.value)}
-                      className="max-w-[5rem] bg-background"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 items-start gap-2 p-2">
-                    <label htmlFor="color" className="font-medium text-md">
-                      Цвет линии:
-                    </label>
-                    <HexColorPicker
-                      id="color"
-                      className="w-full"
-                      color={color}
-                      onChange={setColor}
-                    />
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetValues}
-            className="max-w-fit bg-gray-500 text-background hover:bg-gray-500/80 hover:text-background"
-          >
-            Сбросить значения
-          </Button>
-
-          {/* Поля для начальных условий */}
-          <div className="flex gap-2 items-center mt-4">
-            <Button onClick={addTrajectory} className="w-fit">
-              Добавить траекторию
-            </Button>
-            {trajectories.length >= 2 && (
-              <Button onClick={removeLastTrajectory} className="max-w-fit">
-                Убрать последнюю
-              </Button>
-            )}
-          </div>
-
-          {/* Список траекторий с возможностью удаления */}
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={removeAllTrajectories}
-              className="max-w-fit bg-gray-500 text-background hover:bg-gray-500/80 hover:text-background"
-            >
-              Очистить траектории
-            </Button>
-            <h3 className="font-medium">Траектории:</h3>
-            <div className="w-fit pr-4 max-h-60 overflow-y-auto">
-              {trajectories.map((_, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between gap-4 py-1"
-                >
-                  <span>Траектория {index}</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removeTrajectory(index)}
-                    className="hover:cursor-pointer hover:opacity-90"
+                  <Select
+                    value={method}
+                    onValueChange={(value) =>
+                      setMethod(value as IntegrationMethod)
+                    }
                   >
-                    Удалить
-                  </Button>
+                    <SelectTrigger className="max-w-[15rem]">
+                      <SelectValue placeholder="Выберите метод" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="euler">Метод Эйлера</SelectItem>
+                      <SelectItem value="rk4">
+                        Рунге-Кутта 4-го порядка
+                      </SelectItem>
+                      <SelectItem value="adams">Метод Адамса</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
-              {!trajectories.length && "Нет траекторий"}
-            </div>
-          </div>
+
+                <div className="flex gap-2 items-center">
+                  <Checkbox
+                    id="backward"
+                    checked={values.dt < 0}
+                    onCheckedChange={(checked) =>
+                      onChange("dt", Math.abs(values.dt) * (checked ? -1 : 1))
+                    }
+                  />
+                  <label htmlFor="backward" className="text-gray-600 text-sm">
+                    В обратном времени
+                  </label>
+                </div>
+
+                {numericSettingKeys.map((key) => (
+                  <div
+                    key={key}
+                    className="flex flex-col items-start justify-between gap-2"
+                  >
+                    <label htmlFor={key} className="text-gray-600 text-sm">
+                      {key === "dt"
+                        ? "Шаг интегрирования"
+                        : "Время интегрирования"}
+                    </label>
+                    <ParameterInput
+                      label={key}
+                      value={values[key]}
+                      resetKey={resetKey}
+                      onChange={(v) => onChange(key, v)}
+                      backup={true}
+                      isValidText={true}
+                      addTrajectory={addTrajectory}
+                      className="min-w-[5rem]"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Группа: Параметры системы */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-gray-500 font-medium">
+                Параметры системы
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3">
+                {systemParamKeys.map((key) => (
+                  <div key={key} className="flex flex-col">
+                    <label htmlFor={key} className="text-gray-600 text-sm mb-1">
+                      {key === "ε"
+                        ? "ε (epsilon)"
+                        : key === "α"
+                        ? "α (alpha)"
+                        : "β (beta)"}
+                    </label>
+                    <ParameterInput
+                      label={key}
+                      value={values[key]}
+                      resetKey={resetKey}
+                      onChange={(v) => onChange(key, v)}
+                      backup={true}
+                      isValidText={true}
+                      addTrajectory={addTrajectory}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Группа: Начальные условия */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-gray-500 font-medium">
+                Начальные условия
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2 items-start justify-between">
+                <label className="text-gray-600 text-sm mb-1">
+                  Начальная точка (u₁₀, u₂₀)
+                </label>
+                <div className="flex flex-col items-start sm:flex-row sm:items-center gap-2">
+                  <span className="text-gray-400">(</span>
+                  {initialConditionKeys.map((key, index, arr) => (
+                    <div key={key} className="flex items-center gap-1">
+                      <ParameterInput
+                        label={key}
+                        value={values[key]}
+                        resetKey={resetKey}
+                        onChange={(v) => onChange(key, v)}
+                        addTrajectory={addTrajectory}
+                        className="w-20"
+                      />
+                      {index < arr.length - 1 && (
+                        <span className="text-gray-400">,</span>
+                      )}
+                    </div>
+                  ))}
+                  <span className="text-gray-400">)</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Группа: Настройки графики */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-gray-500 font-medium">
+                Настройки графики
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">
+                    Толщина линии
+                  </label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10}
+                    value={lineWidth}
+                    onChange={(e) => setLineWidth(e.target.value)}
+                    className="w-24 bg-white"
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-gray-600 text-sm mb-1">
+                    Цвет линии
+                  </label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div className="flex items-center gap-2 cursor-pointer">
+                        <div
+                          className="w-6 h-6 rounded-full border"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-sm">{color}</span>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <HexColorPicker color={color} onChange={setColor} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Группа: Управление траекториями */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-gray-500 font-medium">
+                Список траекторий
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-50 overflow-y-auto pr-2">
+                {trajectories.length === 0 ? (
+                  <p className="text-gray-500 text-sm">
+                    Нет добавленных траекторий
+                  </p>
+                ) : (
+                  trajectories.map((_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between py-2 border-b border-gray-100"
+                    >
+                      <span className="text-gray-700">
+                        Траектория #{index + 1}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeTrajectory(index)}
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="relative flex items-start justify-center w-full h-full max-w-[700px] min-h-[600px]">
-          {/* {isPending ? (
-            <FullContainerLoader />
-          ) : ( */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-fit">
+              Управление траекториями
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="flex flex-col gap-3">
+              <Button onClick={addTrajectory} className="w-full">
+                Добавить траекторию
+              </Button>
+
+              {trajectories.length >= 2 && (
+                <Button
+                  onClick={removeLastTrajectory}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Убрать последнюю
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetValues}
+                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Сбросить все значения
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={removeAllTrajectories}
+                disabled={trajectories.length === 0}
+                className="w-full"
+              >
+                Очистить все траектории
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* График */}
+        <div className="relative flex items-start justify-center w-full h-[50dvh] min-h-[600px]">
           <Plot
-            className="w-full h-full"
+            className="w-full h-[50dvh] min-h-[600px]"
             data={plotData}
             layout={{
               title: "Фазовый портрет",
               autosize: true,
+              showlegend: false,
               height: 600,
-              margin: { l: 40, r: 40, t: 40, b: 40 },
-              xaxis: { title: "u1", range: [0, 9] },
+              xaxis: {
+                title: "u₁",
+                range: [0, 9],
+              },
               yaxis: {
-                title: "u2",
+                title: "u₂",
                 range: [-1, 1],
               },
-
-              showlegend: false,
             }}
-            useResizeHandler
-            config={{ displaylogo: false, responsive: true }}
+            config={{
+              responsive: true,
+              displaylogo: false,
+            }}
+            useResizeHandler={true}
+            onClick={handlePlotClick}
           />
-          {/* )} */}
         </div>
       </div>
     </div>

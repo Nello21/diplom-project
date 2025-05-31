@@ -11,7 +11,7 @@ export const routerConfig = createBrowserRouter([
     element: <BaseLayout />,
     children: [
       {
-        path: ROUTES.vanderpol,
+        index: true,
         element: <VanDerPolGraphic />,
       },
       {

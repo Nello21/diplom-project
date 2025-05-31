@@ -253,6 +253,9 @@ export const PhasePortrait = () => {
                     min={0}
                     max={10}
                     value={lineWidth}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") return addTrajectory();
+                    }}
                     onChange={(e) => setLineWidth(e.target.value)}
                     className="w-24 bg-white"
                   />
@@ -318,49 +321,51 @@ export const PhasePortrait = () => {
           </Card>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-fit">
-              Управление траекториями
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80" align="start">
-            <div className="flex flex-col gap-3">
-              <Button onClick={addTrajectory} className="w-full">
-                Добавить траекторию
-              </Button>
+        <div className="flex flex-col gap-2">
+          <Button onClick={addTrajectory} className="w-full">
+            Добавить траекторию
+          </Button>
 
-              {trajectories.length >= 2 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-fit">
+                Управление траекториями
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="start">
+              <div className="flex flex-col gap-3">
                 <Button
-                  onClick={removeLastTrajectory}
-                  variant="secondary"
+                  variant="outline"
+                  size="sm"
+                  onClick={resetValues}
+                  className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  Сбросить все значения
+                </Button>
+
+                {trajectories.length >= 2 && (
+                  <Button
+                    onClick={removeLastTrajectory}
+                    variant="secondary"
+                    className="w-full"
+                  >
+                    Убрать последнюю
+                  </Button>
+                )}
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={removeAllTrajectories}
+                  disabled={trajectories.length === 0}
                   className="w-full"
                 >
-                  Убрать последнюю
+                  Очистить все траектории
                 </Button>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetValues}
-                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-              >
-                Сбросить все значения
-              </Button>
-
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={removeAllTrajectories}
-                disabled={trajectories.length === 0}
-                className="w-full"
-              >
-                Очистить все траектории
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         {/* График */}
         <div className="relative flex items-start justify-center w-full h-[50dvh] min-h-[600px]">

@@ -1,4 +1,4 @@
 export const ROUTES = {
   vanderpol: "/",
-  averagedSystem: "averaged-system",
+  averagedSystem: "/averaged-system",
 };

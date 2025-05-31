@@ -275,7 +275,11 @@ export const VanDerPol3DPlot = () => {
                       }}
                       backup={true}
                       isValidText={true}
-                      addTrajectory={addTrajectory}
+                      addTrajectory={() => {
+                        if (isSystemParamsChanged) {
+                          setIsOpen(true);
+                        } else addTrajectory();
+                      }}
                     />
                   </div>
                 ))}

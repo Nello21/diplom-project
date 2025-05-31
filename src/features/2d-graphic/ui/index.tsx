@@ -65,6 +65,8 @@ export const PhasePortrait = () => {
   const numericSettingKeys = ["dt", "intTime"] as const;
   const initialConditionKeys = ["x0", "y0"] as const;
 
+  console.log(isOpen);
+
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div className="w-full flex justify-between gap-2">
@@ -278,7 +280,11 @@ export const PhasePortrait = () => {
                       }}
                       backup={true}
                       isValidText={true}
-                      addTrajectory={addTrajectory}
+                      addTrajectory={() => {
+                        if (isSystemParamsChanged) {
+                          setIsOpen(true);
+                        } else addTrajectory();
+                      }}
                     />
                   </div>
                 ))}

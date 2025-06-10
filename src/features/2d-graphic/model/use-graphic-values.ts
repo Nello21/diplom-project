@@ -53,6 +53,8 @@ export const useAveragedGraphicValues = () => {
   };
 
   const addTrajectory = () => {
+    console.log(values.x0, values.y0);
+
     const newTrajectory = computeTrajectory({
       ...values,
       steps: Math.abs(values.intTime / values.dt),
@@ -117,7 +119,6 @@ export const useAveragedGraphicValues = () => {
         onChange("x0", point.x);
         onChange("y0", point.y);
       }
-      console.log("Clicked point:", point);
     }
   };
 

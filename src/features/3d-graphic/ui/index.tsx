@@ -82,7 +82,7 @@ export const VanDerPol3DPlot = () => {
           <ArrowLeft className="lg:hidden w-4 h-4" />
         </Button>
 
-        <h1 className="text-xl font-semibold text-center">
+        <h1 className="px-2 text-sm sm:text-xl font-semibold text-center">
           Фазовый портрет системы Ван дер поля с автоматической регулировкой
           частоты
         </h1>
@@ -108,7 +108,7 @@ export const VanDerPol3DPlot = () => {
       </div>
 
       {/* График */}
-      <div className="relative flex items-start justify-center w-full h-[90dvh]">
+      <div className="relative flex items-start justify-center w-full min-w-[500px] h-[65dvh] sm:h-[90dvh]">
         <Plot
           className="w-full h-full"
           data={plotData}
@@ -143,15 +143,6 @@ export const VanDerPol3DPlot = () => {
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
             <div className="flex flex-col gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetValues}
-                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-              >
-                Сбросить все значения
-              </Button>
-
               {trajectories.length >= 2 && (
                 <Button
                   onClick={removeLastTrajectory}
@@ -171,15 +162,24 @@ export const VanDerPol3DPlot = () => {
               >
                 Очистить все траектории
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetValues}
+                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Сбросить все значения
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
 
       <div className="flex flex-col items-start justify-between w-full h-full">
-        <div className="w-full flex gap-4 p-4">
+        <div className="w-full flex flex-col lg:flex-row gap-4 p-4 max-w-[100%] overflow-x-auto">
           {/* Группа: Настройки счёта */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Настройки счёта
@@ -246,7 +246,7 @@ export const VanDerPol3DPlot = () => {
           </Card>
 
           {/* Группа: Параметры системы */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Параметры системы
@@ -288,7 +288,7 @@ export const VanDerPol3DPlot = () => {
           </Card>
 
           {/* Группа: Начальные условия */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] sm:min-w-[350px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Начальные условия
@@ -323,7 +323,7 @@ export const VanDerPol3DPlot = () => {
           </Card>
 
           {/* Группа: Настройки графики */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Настройки графики
@@ -372,7 +372,7 @@ export const VanDerPol3DPlot = () => {
           </Card>
 
           {/* Группа: Управление траекториями */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Список траекторий

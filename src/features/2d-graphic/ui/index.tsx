@@ -65,8 +65,6 @@ export const PhasePortrait = () => {
   const numericSettingKeys = ["dt", "intTime"] as const;
   const initialConditionKeys = ["x0", "y0"] as const;
 
-  console.log(isOpen);
-
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div className="w-full flex justify-between gap-2">
@@ -79,7 +77,7 @@ export const PhasePortrait = () => {
           <ArrowLeft className="lg:hidden w-4 h-4" />
         </Button>
 
-        <h1 className="text-xl font-semibold text-center">
+        <h1 className="px-2 text-sm sm:text-xl font-semibold text-center">
           Фазовый портрет усредненной системы
         </h1>
 
@@ -92,7 +90,7 @@ export const PhasePortrait = () => {
           <ArrowRight className="lg:hidden w-4 h-4" />
         </Button>
       </div>
-      <div className="p-4">
+      <div className="p-4 text-sm sm:text-base w-full">
         <BlockMath>
           {String.raw`
             \begin{cases}
@@ -104,7 +102,7 @@ export const PhasePortrait = () => {
       </div>
 
       {/* График */}
-      <div className="relative flex items-start justify-center w-full h-[50dvh] min-h-[600px]">
+      <div className="relative flex items-start justify-center w-full min-w-[450px] h-[50dvh] min-h-[600px]">
         <Plot
           className="w-full h-[50dvh] min-h-[600px]"
           data={plotData}
@@ -144,15 +142,6 @@ export const PhasePortrait = () => {
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
             <div className="flex flex-col gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetValues}
-                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
-              >
-                Сбросить все значения
-              </Button>
-
               {trajectories.length >= 2 && (
                 <Button
                   onClick={removeLastTrajectory}
@@ -172,15 +161,24 @@ export const PhasePortrait = () => {
               >
                 Очистить все траектории
               </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetValues}
+                className="w-full bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Сбросить все значения
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
 
       <div className="flex flex-col items-start justify-between w-full h-full">
-        <div className="w-full justify-around flex flex-1 gap-4 p-4">
+        <div className="w-full flex flex-col lg:flex-row gap-4 p-4 max-w-[100%] overflow-x-auto">
           {/* Группа: Настройки счёта */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Настройки счёта
@@ -251,7 +249,7 @@ export const PhasePortrait = () => {
           </Card>
 
           {/* Группа: Параметры системы */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Параметры системы
@@ -293,7 +291,7 @@ export const PhasePortrait = () => {
           </Card>
 
           {/* Группа: Начальные условия */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] sm:min-w-[350px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Начальные условия
@@ -328,7 +326,7 @@ export const PhasePortrait = () => {
           </Card>
 
           {/* Группа: Настройки графики */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Настройки графики
@@ -377,7 +375,7 @@ export const PhasePortrait = () => {
           </Card>
 
           {/* Группа: Управление траекториями */}
-          <Card className="flex-1">
+          <Card className="min-w-[300px] lg:flex-1">
             <CardHeader>
               <CardTitle className="text-gray-500 font-medium">
                 Список траекторий
